@@ -1,12 +1,59 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import PokedexLogo from "./images/pokedex.svg";
-import PokedexLogoNew from "./images/pokedex2022.png";
+import PokedexLogo from "../images/pokedex.svg";
+import { GetServerSidePropsContext, GetServerSideProps } from "next";
 
-const pokedex = () => {
+type Pokedata = {
+  abilities: [
+    {
+      ability: {
+        name: string;
+        url: string;
+      };
+      is_hidden: boolean;
+      slot?: number;
+    }
+  ];
+  base_experience: number;
+  forms: [{ name: string; url: string }];
+  game_indices: [
+    {
+      game_index: number;
+      version: { name: string; url: string };
+    }
+  ];
+  height: number | string;
+  moves: [
+    {
+      move: { name: string; url: string };
+    }
+  ];
+};
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  try {
+    const response = await fetch(
+      `https://pokeapi.co/api/v2/pokemon/${context.params.id}`
+    );
+    const data = await response.json();
+    console.log("context.params", context.params);
+    return {
+      props: {
+        data,
+      },
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      props: {},
+    };
+  }
+};
+
+const pokedex = ({ data }) => {
   const [input, setInput] = useState("");
-  const [apiData, setApiData] = useState(null);
+  const [apiData, setApiData] = useState<Pokedata>(data);
 
   const fetchPokemonData = async (id: string) => {
     try {
@@ -19,7 +66,7 @@ const pokedex = () => {
     }
   };
 
-  const handleOnChange = (event: { target: { value: string; }; }) => {
+  const handleOnChange = (event: { target: { value: string } }) => {
     const value = event.target.value;
     setInput(value);
   };
@@ -33,7 +80,9 @@ const pokedex = () => {
   return (
     <>
       <Link href="/">
-        <a className="text-blue-500 hover:underline block m-10">&lt; Back to home!</a>
+        <a className="text-blue-500 hover:underline block m-10">
+          &lt; Back to home!
+        </a>
       </Link>
       <div className="flex flex-col items-center mt-10 px-5">
         <Image src={PokedexLogo} width={400} height={200} />
